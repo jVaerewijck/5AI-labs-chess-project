@@ -1,1 +1,1 @@
-python -m fiveaichess.engines.example_engine 
+.venv\Scripts\python.exe -m fiveaichess.engines.example_engine 
