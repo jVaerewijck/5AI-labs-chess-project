@@ -28,6 +28,7 @@ class MMAgent(Agent):
         # initialize your agent with additional parameters if needed
         self.PIECE_VALUES = {chess.PAWN: 100, chess.KNIGHT: 320, chess.BISHOP: 330,
                         chess.ROOK: 500, chess.QUEEN: 900, chess.KING: 0}
+        self.depth = depth
 
     def calculate_move(self, board: Board, constraints: dict[str, int] = {}) -> Move:
         start_time = time.time()
@@ -42,7 +43,7 @@ class MMAgent(Agent):
         beta = float("inf")
 
         # loop trough all legal moves
-        for move in self.order_moves(board):
+        for move in self.order_moves(board, self.depth):
 
             # check if the maximum calculation time for this move has been reached
             # if time.time() - start_time > self.time_limit_move:
