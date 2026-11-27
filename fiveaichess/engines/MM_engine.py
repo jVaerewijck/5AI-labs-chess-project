@@ -6,7 +6,7 @@ if __name__ == "__main__":
     # create your utility
     utility = NewUtility()
     # create your agent
-    agent = MMAgent(utility, 5.0, depth = 2)
+    agent = MMAgent(utility, 5.0)
     # create the engine
     engine = UCIEngine(agent)
     
