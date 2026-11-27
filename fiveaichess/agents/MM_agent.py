@@ -33,9 +33,6 @@ class MMAgent(Agent):
     def calculate_move(self, board: Board, constraints: dict[str, int] = {}) -> Move:
         start_time = time.time()
         
-        # if the agent is playing as black, the utility values are flipped (negative-positive)
-        flip_value = 1 if board.turn == chess.WHITE else -1
-        
         best_move = random.sample(list(board.legal_moves), 1)[0]
         best_utility = float("-inf")
 
@@ -53,27 +50,69 @@ class MMAgent(Agent):
             board.push(move)
 
             # determine the value of the board after this move
-            value = self.minimax(board,
+            value = -self.negamax(board,
             self.depth - 1,
-            False,
-            flip_value,
-            alpha,
-            beta,
+            -alpha,
+            -beta,
             start_time
             )
-            alpha = max(alpha, value)
 
             # if this is better than all other previous moves, store this move and its utility
-            if value > best_utility:
+            if value > alpha :
                 best_move = move
-                best_utility = value
+                alpha  = value
 
             # revert the board to its original state
             board.pop()
 
         return best_move
 
+    def evaluate(self, board: Board) -> float:
+        v = self.utility.board_value(board)
+        return v if board.turn == chess.WHITE else -v
+    
+    def negamax(self, board: Board, depth: int, alpha: float, beta: float, start_time: float, constraints: dict[str, int] = {}) -> float:
+        if board.is_game_over():
+            return self.evaluate(board)
+        if depth == 0:
+            return self.quiescence(board, alpha, beta)
+        # if time.time() - start_time > self.time_limit_move:
+        #     raise TimeoutError
 
+        best = float("-inf")
+
+        for move in self.order_moves(board, depth):
+            board.push(move)
+            value = -self.negamax(board, depth - 1, -beta, -alpha, start_time)
+            board.pop()
+
+            if value > best:
+                best = value
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+
+        return best
+
+    def quiescence(self, board: Board, alpha: float, beta: float, qdepth: int = 8) -> float:
+        stand_pat = self.evaluate(board)
+        if qdepth == 0 or stand_pat >= beta:
+            return stand_pat
+        alpha = max(alpha, stand_pat)
+        best = stand_pat
+
+        for move in self.order_captures(board):
+            board.push(move)
+            value = -self.quiescence(board, -beta, -alpha, qdepth - 1)
+            board.pop()
+
+            best = max(best, value)
+            alpha = max(alpha, value)
+            if alpha >= beta:
+                break
+
+        return best
+    
     def minimax(self, board: Board, depth: int, maximizing: bool , flip_value: int, alpha: float, beta: float, start_time: float, constraints: dict[str, int] = {}):
         if depth == 0 or board.is_game_over():
              return flip_value * self.utility.board_value(board)
